@@ -67,7 +67,7 @@ from
 group by datum
 ```
 
-###`combined_per_day`
+### `combined_per_day`
 ```postgresql
 create view combined_per_day as
 SELECT
@@ -83,7 +83,7 @@ ORDER BY
 	error_per_day.requests DESC;
 ```
 
-###`stats_per_day`
+### `stats_per_day`
 ```postgresql
 create view stats_per_day as
 select 

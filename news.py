@@ -1,38 +1,41 @@
 #!/usr/bin/env python3
+import sys
+
 import psycopg2
 
 most_popular_articles_query = '''
-        select 
-            title, 
-            count(*) as views from articles, 
+        select
+            title,
+            count(*) as views from articles,
             log
-        where 
-            log.path like concat('%', articles.slug , '%') and log.status = '200 OK'
+        where
+            log.path like concat('%', articles.slug , '%') and
+            log.status = '200 OK'
         group by title
         order by views desc
         limit 3;'''
 
 most_popular_article_author_query = '''
-        select 
-            authors.name, 
-            count(*) as views 
-        from 
-            articles, 
-            authors, 
+        select
+            authors.name,
+            count(*) as views
+        from
+            articles,
+            authors,
             log
-        where 
-            articles.author = authors.id and 
-            log.path like concat('%', articles.slug , '%') and 
+        where
+            articles.author = authors.id and
+            log.path like concat('%', articles.slug , '%') and
             log.status = '200 OK'
         group by authors.name
         order by views desc;'''
 
 error_stat_query = '''
-    select 
+    select
         datum,
-        percent 
-    from	
-        (select 
+        percent
+    from
+        (select
             datum,
             error_requests,
             total_requests,
@@ -43,7 +46,14 @@ error_stat_query = '''
         where percent > 1.0;'''
 
 if __name__ == '__main__':
-    db = psycopg2.connect(database='news')
+    try:
+        db = psycopg2.connect(database='news')
+    except psycopg2.Error as e:
+        print("Unable to connect to the database")
+        print(e.pgerror)
+        print(e.diag.message_detail)
+        sys.exit(1)
+
     cursor = db.cursor()
 
     print("What are the most popular three articles of all time?")
@@ -55,8 +65,8 @@ if __name__ == '__main__':
     print("\nWho are the most popular article authors of all time?")
     cursor.execute(most_popular_article_author_query)
     authors = cursor.fetchall()
-    for article in articles:
-        print("{0} -- {1} views".format(article[0], article[1]))
+    for author in authors:
+        print("{0} -- {1} views".format(author[0], author[1]))
 
     print("\nOn which days did more than 1% of requests lead to errors?")
     cursor.execute(error_stat_query)
